@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html><html lang="es"><head> 
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>UI_INGRESO_CALIFICACIONES_TRIBUTARIAS</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head><body>
+
+<header class="appbar">
+  <img src="{% static 'nuamlogo_HD.png' %}" alt="NUAM Logo" class="brand-logo" width="100">
+  <div class="brand">Mantenedor de Calificaciones Tributarias</div>
+  <nav>
+    <a href="{% url 'calificacion_list' %}">Listado</a>
+    <a href="{% url 'calificacion_create' %}">Ingresar</a>
+    <a href="{% url 'calificacion_list' %}">Carga x Factor</a>
+    <a href="{% url 'calificacion_list' %}">Carga x Monto</a>
+    <a href="{% url 'logout' %}">Cerrar sesión</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div class="card-header">UI_INGRESO_CALIFICACIONES_TRIBUTARIAS</div>
+    <div class="card-body">
+
+      <!-- Cabecera (precargada) -->
+      <form id="form-factores" action="{% url 'calificacion_factores' enc.pk %}" method="post">
+        {% csrf_token %}
+
+        <div class="grid" style="margin-bottom:10px">
+          <div class="field" style="grid-column:span 2">
+            <label>Mercado</label>
+            <input name="mercado_v" type="text" value="{{ enc.mercado }}" readonly>
+          </div>
+          <div class="field" style="grid-column:span 4">
+            <label>Instrumento</label>
+            <input name="instrumento_v" type="text" value="{{ enc.instrumento }}" readonly>
+          </div>
+          <div class="field" style="grid-column:span 2">
+            <label>Valor Histórico</label>
+            <input name="valor_historico_v" type="text" value="{{ enc.valor_historico }}" readonly>
+          </div>
+
+          <div class="field" style="grid-column:span 3">
+            <label>Fecha Pago</label>
+            <input name="fecha_pago_v" type="text" value="{{ enc.fecha_pago|date:'Y-m-d' }}" readonly>
+          </div>
+          <div class="field" style="grid-column:span 3">
+            <label>Evento Capital</label>
+            <input name="evento_capital_v" type="text" value="{{ enc.evento_capital }}" readonly>
+          </div>
+          <div class="field" style="grid-column:span 2">
+            <label>Año</label>
+            <input name="anio_v" type="text" value="{{ enc.anio }}" readonly>
+          </div>
+
+          <div class="field" style="grid-column:span 5">
+            <label>Descripción</label>
+            <input name="descripcion_v" type="text" value="{{ enc.descripcion }}" readonly>
+          </div>
+          <div class="field" style="grid-column:span 3">
+            <label>Secuencia Evento</label>
+            <input name="secuencia_evento_v" type="text" value="{{ enc.secuencia_evento }}" readonly>
+          </div>
+          <div class="field" style="grid-column:span 2">
+            <label>Ingreso por Montos</label>
+            <input name="ingreso_por_montos" id="ingreso-montos" type="checkbox" {% if enc.ingreso_por_montos %}checked{% endif %}>
+          </div>
+        </div>
+
+        <!-- FACTORES 08..37 (usamos el form para no repetir 30 inputs) -->
+        <div class="grid">
+          <div class="field" style="grid-column:span 4"><label>Factor-08 No Constitutiva de Renta No Acogido a Impto.</label>{{ form.f08 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-09 Impto. 1ra Categ. Afecto GI. Comp. Con Devolución</label>{{ form.f09 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-10 Impuesto Tasa Adicional Exento Art. 21</label>{{ form.f10 }}</div>
+
+          <div class="field" style="grid-column:span 4"><label>Factor-11 Incremento Impuesto 1ra Categoría</label>{{ form.f11 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-12 Impto. 1ra Categ. Exento GI. Comp. Con Devolución</label>{{ form.f12 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-13 Impto. 1ra Categ. Afecto GI. Comp. Sin Devolución</label>{{ form.f13 }}</div>
+
+          <div class="field" style="grid-column:span 4"><label>Factor-14 Impto. 1ra Categ. Exento GI. Comp. Sin Devolución</label>{{ form.f14 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-15 Impto. Créditos pro Impuestos Externos</label>{{ form.f15 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-16 No Constitutiva de Renta Acogido a Impto.</label>{{ form.f16 }}</div>
+
+          <div class="field" style="grid-column:span 4"><label>Factor-17 No Constitutiva de Renta Devolución de Capital Art.17</label>{{ form.f17 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Rentas Exentas de Impto. GC y/o Impto Adicional</label>{{ form.f18 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-19A Ingreso no Constitutivos de Renta</label>{{ form.f19a }}</div>
+
+          <div class="field" style="grid-column:span 4"><label>Factor-20 Sin Derecho a Devolución</label>{{ form.f20 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-21 Con Derecho a Devolución</label>{{ form.f21 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-22 Sin Derecho a Devolución</label>{{ form.f22 }}</div>
+
+          <div class="field" style="grid-column:span 4"><label>Factor-23 Con Derecho a Devolución</label>{{ form.f23 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-24 Sin Derecho a Devolución</label>{{ form.f24 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-25 Con Derecho a Devolución</label>{{ form.f25 }}</div>
+
+          <div class="field" style="grid-column:span 4"><label>Factor-26 Sin Derecho a Devolución</label>{{ form.f26 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-27 Con Derecho a Devolución</label>{{ form.f27 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-28 Crédito por IPE</label>{{ form.f28 }}</div>
+
+          <div class="field" style="grid-column:span 4"><label>Factor-29 Sin Derecho a Devolución</label>{{ form.f29 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-30 Con Derecho a Devolución</label>{{ form.f30 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-31 Sin Derecho a Devolución</label>{{ form.f31 }}</div>
+
+          <div class="field" style="grid-column:span 4"><label>Factor-32 Con Derecho a Devolución</label>{{ form.f32 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-33 Crédito por IPE</label>{{ form.f33 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-34 Cred. Por Impto. Tasa Adicional, Ex Art. 21 LIR</label>{{ form.f34 }}</div>
+
+          <div class="field" style="grid-column:span 4"><label>Factor-35 Tasa Efectiva Del Cred. Del FUT (TEF)</label>{{ form.f35 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-36 Tasa Efectiva Del Cred. Del FUNT (TEX)</label>{{ form.f36 }}</div>
+          <div class="field" style="grid-column:span 4"><label>Factor-37 Devolución de Capital Art. 17 num 7 LIR</label>{{ form.f37 }}</div>
+
+          <div class="field" style="grid-column:span 12">
+            <label>UL_FACTOR_38_DESCRIPCIO</label>{{ form.f38_desc }}
+          </div>
+        </div>
+
+        <div class="footer-actions">
+          <button class="btn btn-primary" type="submit" {% if not can_edit %}disabled{% endif %}>Guardar</button>
+          <a class="btn btn-outline" href="{% url 'calificacion_list' %}">Cancelar</a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+</body></html>

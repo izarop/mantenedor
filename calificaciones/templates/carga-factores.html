@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html><html lang="es"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Cargar Archivo · Carga x Factor</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head><body>
+
+<header class="appbar">
+  <div class="brand">NUAM · Mantenedor de Calificaciones Tributarias</div>
+  <nav>
+    <a href="{% url 'calificacion_list' %}">Listado</a>
+    <a href="{% url 'calificacion_create' %}">Ingresar</a>
+    <a href="{% url 'calificacion_list' %}">Factores/Calcular</a>
+    <a href="{% url 'calificacion_list' %}">Carga x Factor</a>
+    <a href="{% url 'calificacion_list' %}">Carga x Monto</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div class="card-header">Cargar Archivo · Carga x Factor</div>
+    <div class="card-body">
+      <div class="actions" style="margin-bottom:12px">
+        <input type="file" accept=".csv,.xlsx,.xls">
+        <button class="btn btn-outline" onclick="alert('Vista previa simulada')">Ver Formato</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mercado</th><th>Instrumento</th><th>Fecha Pago</th><th>Sec.</th>
+              <th>Año</th><th>Descripción</th><th>F. 1ra Cat.</th><th>F. Crédito</th><th>F. PPM</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="9" style="color:var(--muted)">Sin registros — sube un archivo para previsualizar</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer-actions">
+        <a class="btn btn-outline" href="{% url 'calificacion_list' %}">Cancelar</a>
+        <button class="btn btn-outline" onclick="alert('Factores calculados (simulado)')">Calcular Factores</button>
+        <a class="btn btn-primary" href="{% url 'calificacion_list' %}" onclick="alert('Carga grabada (simulado)')">Grabar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body></html>

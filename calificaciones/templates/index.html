@@ -1,0 +1,304 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Calificaciones Tributarias · Listado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<header class="appbar">
+  <div class="brand">NUAM · Mantenedor de Calificaciones Tributarias</div>
+  <nav>
+    {% if user.is_authenticated %}
+      
+      <a href="{% url 'calificacion_list' %}">Listado</a>
+      
+      {% with user.perfil.rol as rol %}
+        
+        {% if rol == 1 or rol == 2 %}
+          <a href="{% url 'calificacion_create' %}">Ingresar Calificación</a>
+          <a href="{% url 'carga_factores' %}">Carga x Factor (DJ1948)</a>
+          <a href="{% url 'carga_montos' %}">Carga x Monto (Factores)</a>
+        {% endif %}
+
+        {% if rol == 1 or rol == 4 %}
+          <a href="#" onclick="alert('Pendiente: Vista de Logs/Auditoría')">Logs/Auditoría</a>
+          <a href="#" onclick="alert('Pendiente: Vista de Reportes Globales')">Reportes Globales</a>
+        {% endif %}
+
+        {% if rol == 3 %}
+            <a href="{% url 'calificacion_create' %}">Ingresar Manualmente</a>
+        {% endif %}
+      {% endwith %}
+
+      <a href="{% url 'logout' %}">Cerrar Sesión ({{ user.username }})</a>
+      
+    {% else %}
+      <a href="{% url 'login' %}" class="btn-primary">Iniciar Sesión</a>
+      <a href="{% url 'register' %}">Registrarse</a>
+    {% endif %}
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div class="card-header">Calificaciones Tributarias — Búsqueda</div>
+    <div class="card-body">
+
+      <div class="grid" style="align-items:end;margin-bottom:12px">
+        <div class="field" style="grid-column:span 3">
+          <label>Mercado</label>
+          <select id="f-mercado">
+            <option value="">(Todos)</option>
+            <option>ACCIONES</option>
+            <option>BONOS</option>
+            <option>FONDOS</option>
+            <option>AC</option>
+            <option>BC</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:span 3">
+          <label>Origen</label>
+          <select id="f-origen">
+            <option value="">(Todos)</option>
+            <option>CORREDOR</option>
+            <option>DEPOSITARIO</option>
+            <option>EMISOR</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:span 2">
+          <label>Período Comercial</label>
+          <input id="f-periodo" type="number" min="1990" max="2100" value="">
+        </div>
+        <div class="field" style="grid-column:span 2">
+          <label style="visibility:hidden">.</label>
+          <label style="display:flex;gap:8px;align-items:center">
+            <input id="f-pendiente" type="checkbox" {% if request.GET.pendiente == '1' %}checked{% endif %}> Calificación Pendiente
+          </label>
+        </div>
+        <div class="actions" style="grid-column:span 2;justify-content:flex-end">
+          <button class="btn btn-primary" id="btn-buscar" type="button">Buscar</button>
+          <button class="btn btn-outline" id="btn-limpiar" type="button">Limpiar</button>
+        </div>
+      </div>
+
+      <div class="table-wrap table-wide">
+        <table id="tabla">
+          <thead>
+            <tr>
+              <th>Ejercicio</th>
+              <th>Instrumento</th>
+              <th>Fecha Pago</th>
+              <th>Descripción</th>
+              <th>Sec. Evento</th>
+              <th>Factor de Actual.</th>
+              <th>Factor-08</th><th>Factor-09</th><th>Factor-10</th><th>Factor-11</th><th>Factor-12</th>
+              <th>Factor-13</th><th>Factor-14</th><th>Factor-15</th><th>Factor-16</th><th>Factor-17</th>
+              <th>Factor-18</th><th>Factor-19A</th><th>Factor-20</th><th>Factor-21</th><th>Factor-22</th>
+              <th>Factor-23</th><th>Factor-24</th><th>Factor-25</th><th>Factor-26</th><th>Factor-27</th>
+              <th>Factor-28</th><th>Factor-29</th><th>Factor-30</th><th>Factor-31</th><th>Factor-32</th>
+              <th>Factor-33</th><th>Factor-34</th><th>Factor-35</th><th>Factor-36</th><th>Factor-37</th>
+              </tr>
+          </thead>
+<tbody>
+  {% for it in items %}
+  <tr data-id="{{ it.id }}" data-mercado="{{ it.mercado }}" data-origen="{{ it.origen|default_if_none:'' }}" data-periodo="{{ it.anio }}" data-pendiente="{{ it.pendiente|yesno:'true,false' }}">
+    <td>{{ it.anio }}</td>
+    <td>{{ it.instrumento }}</td>
+    <td>{{ it.fecha_pago|date:"d-m-Y" }}</td>
+    <td>{{ it.descripcion }}</td>
+    <td>{{ it.secuencia_evento }}</td>
+    <td>{{ it.factor_actualizacion|floatformat:8 }}</td>
+
+    {% with f=it.factores %}
+      {% if f %}
+        <td>{{ f.f08|floatformat:8 }}</td>
+        <td>{{ f.f09|floatformat:8 }}</td>
+        <td>{{ f.f10|floatformat:8 }}</td>
+        <td>{{ f.f11|floatformat:8 }}</td>
+        <td>{{ f.f12|floatformat:8 }}</td>
+        <td>{{ f.f13|floatformat:8 }}</td>
+        <td>{{ f.f14|floatformat:8 }}</td>
+        <td>{{ f.f15|floatformat:8 }}</td>
+        <td>{{ f.f16|floatformat:8 }}</td>
+        <td>{{ f.f17|floatformat:8 }}</td>
+        <td>{{ f.f18|floatformat:8 }}</td>
+        <td>{{ f.f19a|floatformat:8 }}</td>
+        <td>{{ f.f20|floatformat:8 }}</td>
+        <td>{{ f.f21|floatformat:8 }}</td>
+        <td>{{ f.f22|floatformat:8 }}</td>
+        <td>{{ f.f23|floatformat:8 }}</td>
+        <td>{{ f.f24|floatformat:8 }}</td>
+        <td>{{ f.f25|floatformat:8 }}</td>
+        <td>{{ f.f26|floatformat:8 }}</td>
+        <td>{{ f.f27|floatformat:8 }}</td>
+        <td>{{ f.f28|floatformat:8 }}</td>
+        <td>{{ f.f29|floatformat:8 }}</td>
+        <td>{{ f.f30|floatformat:8 }}</td>
+        <td>{{ f.f31|floatformat:8 }}</td>
+        <td>{{ f.f32|floatformat:8 }}</td>
+        <td>{{ f.f33|floatformat:8 }}</td>
+        <td>{{ f.f34|floatformat:8 }}</td>
+        <td>{{ f.f35|floatformat:8 }}</td>
+        <td>{{ f.f36|floatformat:8 }}</td>
+        <td>{{ f.f37|floatformat:8 }}</td>
+      {% else %}
+        {% for _ in "123456789012345678901234567"|make_list %}
+          <td>0.00000000</td>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    </tr>
+  {% empty %}
+  <tr><td colspan="36" style="color:var(--muted)">Sin registros</td></tr>
+  {% endfor %}
+</tbody>
+
+        </table>
+      </div>
+
+      <div class="toolbar" style="margin-top:12px">
+        <div class="actions">
+          <a class="btn btn-primary" href="{% url 'calificacion_create' %}">Ingresar</a>
+          
+          {% with user.perfil.rol as rol %}
+            
+            {% if rol == 1 or rol == 2 %}
+              <button class="btn btn-outline" type="button" onclick="openEdit()">Modificar</button>
+              <button class="btn btn-outline" type="button" onclick="openDelete()">Eliminar</button> 
+              <button class="btn btn-outline" type="button" onclick="alert('Copiar (implementación posterior)')">Copiar</button>
+            {% endif %}
+            
+            {% if rol == 1 or rol == 2 or rol == 4 %}
+              <button class="btn btn-outline" type="button" onclick="openFactores()">Factores/Calcular</button>
+            {% endif %}
+
+            {% if rol == 1 or rol == 2 %}
+              <a class="btn btn-outline" href="{% url 'carga_factores' %}">Carga x Factor</a>
+              <a class="btn btn-outline" href="{% url 'carga_montos' %}">Carga x Monto</a>
+            {% endif %}
+
+          {% endwith %}
+          
+        </div>
+        <div class="spacer"></div>
+        <div class="actions">
+          <button class="btn btn-outline" type="button" onclick="alert('Opciones (posterior)')">Opciones</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<form id="delete-form" method="POST" style="display: none;">
+    {% csrf_token %}
+</form>
+
+<script>
+  const $mercado   = document.getElementById('f-mercado');
+  const $origen    = document.getElementById('f-origen');
+  const $periodo   = document.getElementById('f-periodo');
+  const $pendiente = document.getElementById('f-pendiente');
+  const $tbody     = document.querySelector('#tabla tbody');
+  const $rows      = Array.from($tbody.querySelectorAll('tr'));
+
+  function coincide(v, f){ return !f || (String(v).toUpperCase() === String(f).toUpperCase()); }
+
+  function filtrar(){
+    const fMercado = $mercado.value.trim();
+    const fOrigen  = $origen.value.trim();
+    const fPeriodo = ($periodo.value || '').trim();
+    const fPend    = $pendiente.checked ? 'true' : '';
+
+    $rows.forEach(tr=>{
+      const m  = tr.dataset.mercado || '';
+      const o  = tr.dataset.origen || '';
+      const p  = tr.dataset.periodo || '';
+      const cp = tr.dataset.pendiente || 'false';
+      const ok =
+        coincide(m, fMercado) &&
+        coincide(o, fOrigen)  &&
+        coincide(p, fPeriodo) &&
+        (fPend ? cp === 'true' : true);
+      tr.style.display = ok ? '' : 'none';
+    });
+  }
+
+  document.getElementById('btn-buscar').addEventListener('click', filtrar);
+  
+  document.getElementById('btn-limpiar').addEventListener('click', ()=>{
+    $mercado.value = ''; 
+    $origen.value  = ''; 
+    $periodo.value = ''; 
+    $pendiente.checked = false;
+    $rows.forEach(tr=>tr.style.display='');
+  });
+</script>
+
+<style>
+  #tabla tbody tr { cursor: pointer; }
+  #tabla tbody tr.selected { outline: 2px solid #FF5722; background: #fff7f3; }
+</style>
+<script>
+  document.querySelectorAll('#tabla tbody tr').forEach(tr => {
+    tr.addEventListener('click', () => {
+      document.querySelectorAll('#tabla tbody tr').forEach(r => r.classList.remove('selected'));
+      tr.classList.add('selected');
+    });
+  });
+
+  function selectedId() {
+    const tr = document.querySelector('#tabla tbody tr.selected');
+    return tr ? tr.dataset.id : null;
+  }
+
+  // Función Modificar centralizada
+  function openEdit() {
+    const id = selectedId();
+    if (!id) { alert('Selecciona una fila primero para modificar.'); return; }
+    const base = "{% url 'calificacion_edit' 0 %}";
+    const url  = base.replace('/0/', `/${id}/`);
+    location.href = url;
+  }
+
+  // Función Factores/Calcular centralizada
+  function openFactores() {
+    const id = selectedId();
+    if (!id) { alert('Selecciona una fila primero para calcular factores.'); return; }
+    const base = "{% url 'calificacion_factores' 0 %}";
+    const url  = base.replace('/0/', `/${id}/`);
+    location.href = url;
+  }
+
+  // FUNCIÓN PARA ELIMINAR (CONECTADA A LA VISTA DE POST)
+  function openDelete() {
+      const id = selectedId();
+      if (!id) {
+          alert('Selecciona una fila primero para eliminar.');
+          return;
+      }
+      
+      if (confirm(`¿Estás seguro de eliminar permanentemente la calificación ID ${id}? Esta acción es irreversible.`)) {
+          
+          const deleteForm = document.getElementById('delete-form');
+          
+          // Establecer la acción para la URL de eliminación
+          const baseUrl = "{% url 'calificacion_delete' 0 %}";
+          deleteForm.action = baseUrl.replace('/0/', `/${id}/`);
+
+          // Enviar la solicitud POST
+          deleteForm.submit();
+      }
+  }
+</script>
+
+</body>
+</html>

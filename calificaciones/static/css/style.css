@@ -1,0 +1,236 @@
+/* =========================================
+   NUAM Tributario — Tema NARANJO FORMAL
+   ========================================= */
+
+:root {
+  --nuam-naranja: #e05206;       /* Naranja corporativo principal */
+  --nuam-naranja-oscuro: #b13f04;
+  --nuam-gris-claro: #f4f5f7;
+  --nuam-gris-medio: #d1d5db;
+  --nuam-gris-oscuro: #374151;
+  --nuam-blanco: #ffffff;
+  --nuam-borde: #e5e7eb;
+  --nuam-fondo: #fafafa;
+  --nuam-texto: #1f2937;
+  --nuam-muted: #6b7280;
+  --radius: 8px;
+  --shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+
+/* =========================================
+   ESTILOS BASE
+   ========================================= */
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: 'Open Sans', 'Segoe UI', Arial, sans-serif;
+  background-color: var(--nuam-fondo);
+  color: var(--nuam-texto);
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+/* =========================================
+   BARRA SUPERIOR (NAV)
+   ========================================= */
+.appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, var(--nuam-naranja), var(--nuam-naranja-oscuro));
+  color: var(--nuam-blanco);
+  padding: 12px 24px;
+  box-shadow: var(--shadow);
+}
+.appbar .brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+}
+.appbar nav {
+  display: flex;
+  gap: 10px;
+}
+.appbar a {
+  text-decoration: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+.appbar a:hover {
+  background-color: rgba(255,255,255,0.15);
+}
+
+/* =========================================
+   ESTRUCTURA GENERAL
+   ========================================= */
+.container {
+  max-width: 1250px;
+  margin: 30px auto;
+  padding: 0 24px;
+}
+.card {
+  background-color: var(--nuam-blanco);
+  border: 1px solid var(--nuam-borde);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 25px;
+}
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--nuam-borde);
+  font-weight: 700;
+  color: var(--nuam-gris-oscuro);
+  background-color: var(--nuam-gris-claro);
+}
+.card-body {
+  padding: 20px;
+}
+
+/* =========================================
+   FORMULARIOS
+   ========================================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--nuam-gris-oscuro);
+}
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--nuam-borde);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--nuam-naranja);
+  box-shadow: 0 0 0 3px rgba(224, 82, 6, 0.15);
+  outline: none;
+}
+
+/* =========================================
+   BOTONES
+   ========================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  padding: 9px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-size: 0.93rem;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+.btn-primary {
+  background-color: var(--nuam-naranja);
+  color: var(--nuam-blanco);
+  border: 1px solid var(--nuam-naranja);
+}
+.btn-primary:hover {
+  background-color: var(--nuam-naranja-oscuro);
+}
+.btn-outline {
+  background-color: var(--nuam-blanco);
+  color: var(--nuam-naranja-oscuro);
+  border: 1px solid var(--nuam-naranja);
+}
+.btn-outline:hover {
+  background-color: var(--nuam-naranja);
+  color: #fff;
+}
+.footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+/* =========================================
+   TABLAS
+   ========================================= */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--nuam-borde);
+  border-radius: var(--radius);
+  background: var(--nuam-blanco);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+thead th {
+  background-color: var(--nuam-gris-claro);
+  color: var(--nuam-gris-oscuro);
+  text-align: left;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nuam-borde);
+  white-space: nowrap;
+}
+tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nuam-borde);
+  color: var(--nuam-texto);
+  white-space: nowrap;
+}
+tbody tr:hover {
+  background-color: #fff5f0;
+}
+tfoot td {
+  background-color: var(--nuam-gris-claro);
+}
+
+/* =========================================
+   TOOLBAR / ACCIONES
+   ========================================= */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+/* =========================================
+   BADGES / UTILIDADES
+   ========================================= */
+.badge {
+  background-color: #fff1e7;
+  color: var(--nuam-naranja-oscuro);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid #ffe0d2;
+}
+.text-muted {
+  color: var(--nuam-muted);
+}
+.text-right {
+  text-align: right;
+}
+.hide {
+  display: none !important;
+}

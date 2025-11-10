@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NUAM | Inicio de Sesión</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* Mantengo los estilos que tenías en el snippet para que se vea igual */
+    :root { --primary-orange:#FF5722; --secondary-gray:#F5F5F5; --dark-text:#333; --light-text:#FFF; --input-border:#CCC; --shadow:0 4px 8px rgba(0,0,0,0.1); }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:'Roboto',sans-serif; }
+    body { display:flex; justify-content:center; align-items:center; min-height:100vh; background-color:var(--secondary-gray); color:var(--dark-text); }
+    .login-container { background:var(--light-text); padding:40px; border-radius:8px; box-shadow:var(--shadow); width:100%; max-width:400px; text-align:center; }
+    .logo{ margin-bottom:30px; }
+    .login-container h2{ font-size:24px; margin-bottom:25px; font-weight:500; }
+    .login-form .form-group{ margin-bottom:15px; text-align:left; }
+    .login-form label{ display:block; margin-bottom:5px; font-weight:500; font-size:14px; }
+    .login-form input{ width:100%; padding:10px; border:1px solid var(--input-border); border-radius:4px; font-size:16px; }
+    .login-button{ width:100%; padding:12px; background:var(--primary-orange); color:var(--light-text); border:none; border-radius:4px; font-size:18px; font-weight:500; cursor:pointer; transition:.3s; }
+    .login-button:hover{ background:#E64A19; }
+    .login-links{ margin-top:25px; font-size:14px; }
+    .login-links a{ color:var(--primary-orange); text-decoration:none; margin:0 10px; }
+    .messages { list-style: none; padding: 10px; margin-bottom: 15px; background: #f0f8ff; border: 1px solid #cceeff; border-radius: 4px; text-align: left; }
+    .messages .error { background: #fdd; border-color: #f99; color: #a00; }
+    .messages .warning { background: #ffe; border-color: #eed; color: #a90; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="var(--primary-orange)" xmlns="http://www.w3.org/2000/svg" width="80" height="80">
+        <path d="M12 2L2 22h20L12 2zm0 6l5.5 11H6.5L12 8z"/>
+      </svg>
+    </div>
+    <h2>Inicio de Sesión</h2>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form class="login-form" action="{% url 'login' %}" method="post">
+      {% csrf_token %}
+      
+      {% for field in form %}
+        <div class="form-group">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}
+              <p class="error-message" style="color:red; font-size:12px;">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
+      
+      <button type="submit" class="login-button">Ingresar</button>
+    </form>
+    
+    <div class="login-links">
+      <a href="{% url 'register' %}">¿Aún no tienes cuenta? Regístrate</a>
+    </div>
+  </div>
+</body>
+</html>
