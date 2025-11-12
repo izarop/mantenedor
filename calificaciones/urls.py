@@ -1,23 +1,24 @@
+# calificaciones/urls.py
 from django.urls import path
 from . import views
 
-
 urlpatterns = [
-    # URLs de Autenticación
+    # Auth
     path('login/', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
-    
-    # URLs de Calificaciones (Listado y CRUD)
+
+    # Listado + CRUD
     path('', views.calificacion_list, name='calificacion_list'),
     path('ingresar/', views.calificacion_create, name='calificacion_create'),
+    path('<int:pk>/editar/', views.calificacion_edit, name='calificacion_edit'),
     path('<int:pk>/eliminar/', views.calificacion_delete, name='calificacion_delete'),
+    path('<int:pk>/factores/', views.calificacion_factores, name='calificacion_factores'),
 
-    # Vistas de carga
+    # Cargas masivas
     path('carga-factores/', views.carga_factores, name='carga_factores'),
+    path('carga-factores/confirmar/', views.confirmar_carga_factores, name='confirmar_carga_factores'),
     path('carga-montos/', views.carga_montos, name='carga_montos'),
-
-    # Si usas estos en la tabla:
     path('<int:pk>/editar/', views.calificacion_edit, name='calificacion_edit'),
     path('<int:pk>/factores/', views.calificacion_factores, name='calificacion_factores'),
 ]

@@ -128,3 +128,29 @@ STATICFILES_DIRS = [BASE_DIR / 'calificaciones' / 'static']
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# settings.py
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+
+# Permitir que páginas del MISMO ORIGEN se muestren en iframes (necesario para tu modal)
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
+
+# settings.py
+
+# ... (otras configuraciones)
+
+# 1. Habilitar la localización (necesario para aceptar formatos regionales)
+USE_I18N = True
+USE_L10N = True
+
+# 2. Establecer la coma como separador decimal
+DECIMAL_SEPARATOR = ','
+
+# 3. Establecer el punto como separador de miles
+USE_THOUSAND_SEPARATOR = True
+THOUSAND_SEPARATOR = '.'
+
+# 4. OPCIONAL PERO RECOMENDADO: Si tu sitio es de Chile.
+LANGUAGE_CODE = 'es-cl'
+TIME_ZONE = 'America/Santiago'

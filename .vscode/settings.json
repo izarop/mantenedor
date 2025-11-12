@@ -1,0 +1,20 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 100,
+            "server": "127.0.0.1",
+            "port": 3307,
+            "driver": "MySQL",
+            "name": "Mantenedor",
+            "group": "MySQL",
+            "database": "mantenedor",
+            "username": "romi",
+            "password": "Inacap2025"
+        }
+    ]
+}

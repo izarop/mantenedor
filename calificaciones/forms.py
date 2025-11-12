@@ -3,7 +3,7 @@ from django import forms
 from .models import CalificacionEncabezado, CalificacionFactores
 from django.contrib.auth.forms import UserCreationForm
 # Asegúrate de que ROL_ADMIN esté disponible en models.py
-from .models import Perfil, ROL_CORREDOR, ROLES_CHOICES, ROL_ADMIN 
+from .models import  ROL_CORREDOR, ROLES_CHOICES, ROL_ADMIN 
 
 
 class Decimal8Input(forms.NumberInput):
@@ -94,3 +94,20 @@ class RegistroForm(UserCreationForm):
             user.perfil.save() # Guarda los campos rol/institucion en el Perfil
 
         return user
+    
+
+class CargaFactoresForm(forms.Form):
+    archivo = forms.FileField(
+        label="Seleccione un archivo CSV",
+        help_text="Solo archivos .csv con columnas: encabezado_id y f08..f37",
+        widget=forms.ClearableFileInput(attrs={'accept': '.csv'})
+    )
+
+    def clean_archivo(self):
+        f = self.cleaned_data['archivo']
+        name = (f.name or '').lower()
+        if not name.endswith('.csv'):
+            raise forms.ValidationError("El archivo debe ser .csv")
+        if f.size and f.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("Archivo demasiado grande (máx 5MB)")
+        return f

@@ -97,7 +97,9 @@
               <th>Fecha Pago</th>
               <th>Descripción</th>
               <th>Sec. Evento</th>
-              <th>Factor de Actual.</th>
+              <th>Acogido ISFUT</th>
+              <th>Origen</th>
+              <th>Factor de Actualizacion</th>
               <th>Factor-08</th><th>Factor-09</th><th>Factor-10</th><th>Factor-11</th><th>Factor-12</th>
               <th>Factor-13</th><th>Factor-14</th><th>Factor-15</th><th>Factor-16</th><th>Factor-17</th>
               <th>Factor-18</th><th>Factor-19A</th><th>Factor-20</th><th>Factor-21</th><th>Factor-22</th>
@@ -114,7 +116,9 @@
     <td>{{ it.fecha_pago|date:"d-m-Y" }}</td>
     <td>{{ it.descripcion }}</td>
     <td>{{ it.secuencia_evento }}</td>
-    <td>{{ it.factor_actualizacion|floatformat:8 }}</td>
+    <td>{{ it.sfut|yesno:"Sí,No"}}</td>
+    <td>{{ it.origen }}</td>
+    <td>{{ it.factor_actualizacion|floatformat:0 }}</td>
 
     {% with f=it.factores %}
       {% if f %}
@@ -173,26 +177,18 @@
             {% if rol == 1 or rol == 2 %}
               <button class="btn btn-outline" type="button" onclick="openEdit()">Modificar</button>
               <button class="btn btn-outline" type="button" onclick="openDelete()">Eliminar</button> 
-              <button class="btn btn-outline" type="button" onclick="alert('Copiar (implementación posterior)')">Copiar</button>
             {% endif %}
             
-            {% if rol == 1 or rol == 2 or rol == 4 %}
-              <button class="btn btn-outline" type="button" onclick="openFactores()">Factores/Calcular</button>
-            {% endif %}
 
             {% if rol == 1 or rol == 2 %}
+            <button class="btn btn-outline" type="button" onclick="openCarga()">Carga x Factor</button>
+
               <a class="btn btn-outline" href="{% url 'carga_factores' %}">Carga x Factor</a>
               <a class="btn btn-outline" href="{% url 'carga_montos' %}">Carga x Monto</a>
             {% endif %}
 
           {% endwith %}
           
-        </div>
-        <div class="spacer"></div>
-        <div class="actions">
-          <button class="btn btn-outline" type="button" onclick="alert('Opciones (posterior)')">Opciones</button>
-        </div>
-      </div>
 
     </div>
   </div>
@@ -299,6 +295,29 @@
       }
   }
 </script>
+<dialog id="dlg-carga" style="width:90%;max-width:1100px;border:none;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.2);">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #eee">
+    <strong>Carga de Calificaciones (Factores f08–f37)</strong>
+    <button class="btn btn-outline" onclick="closeCarga()">Cerrar</button>
+  </div>
+  <iframe id="if-carga" src="" style="width:100%;height:70vh;border:0"></iframe>
+</dialog>
+
+<script>
+  function openCarga(){
+    const d = document.getElementById('dlg-carga');
+    const i = document.getElementById('if-carga');
+    i.src = "{% url 'carga_factores' %}";
+    if (typeof d.showModal === 'function') d.showModal(); else window.open(i.src, '_blank');
+  }
+  function closeCarga(){
+    const d = document.getElementById('dlg-carga');
+    const i = document.getElementById('if-carga');
+    i.src = "";
+    if (typeof d.close === 'function') d.close();
+  }
+</script>
+
 
 </body>
 </html>

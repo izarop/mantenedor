@@ -46,7 +46,7 @@
             <input name="fecha_pago_v" type="text" value="{{ enc.fecha_pago|date:'Y-m-d' }}" readonly>
           </div>
           <div class="field" style="grid-column:span 3">
-            <label>Evento Capital</label>
+            <label>Dividendo</label>
             <input name="evento_capital_v" type="text" value="{{ enc.evento_capital }}" readonly>
           </div>
           <div class="field" style="grid-column:span 2">
@@ -109,14 +109,11 @@
           <div class="field" style="grid-column:span 4"><label>Factor-35 Tasa Efectiva Del Cred. Del FUT (TEF)</label>{{ form.f35 }}</div>
           <div class="field" style="grid-column:span 4"><label>Factor-36 Tasa Efectiva Del Cred. Del FUNT (TEX)</label>{{ form.f36 }}</div>
           <div class="field" style="grid-column:span 4"><label>Factor-37 Devolución de Capital Art. 17 num 7 LIR</label>{{ form.f37 }}</div>
-
-          <div class="field" style="grid-column:span 12">
-            <label>UL_FACTOR_38_DESCRIPCIO</label>{{ form.f38_desc }}
-          </div>
         </div>
 
         <div class="footer-actions">
-          <button class="btn btn-primary" type="submit" {% if not can_edit %}disabled{% endif %}>Guardar</button>
+          <button class="btn btn-primary" type="submit" >Calcular</button>
+          <button class="btn btn-primary" type="submit" {% if not can_edit %}disabled{% endif %}>Grabar</button>
           <a class="btn btn-outline" href="{% url 'calificacion_list' %}">Cancelar</a>
         </div>
 

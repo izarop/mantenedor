@@ -24,7 +24,7 @@ class CalificacionEncabezado(models.Model):
     mercado = models.CharField(max_length=20, choices=MERCADO_CHOICES)
     origen = models.CharField(max_length=20, choices=ORIGEN_CHOICES, blank=True)
     instrumento = models.CharField(max_length=100)
-    evento_capital = models.CharField(max_length=100)
+    evento_capital = models.PositiveIntegerField()
     valor_historico = models.DecimalField(max_digits=18, decimal_places=8, default=DEC18_8_DEFAULT)
     fecha_pago = models.DateField()
     secuencia_evento = models.PositiveIntegerField()
@@ -88,7 +88,6 @@ class CalificacionFactores(models.Model):
     f36  = models.DecimalField(max_digits=18, decimal_places=8, default=DEC18_8_DEFAULT)
     f37  = models.DecimalField(max_digits=18, decimal_places=8, default=DEC18_8_DEFAULT)
 
-    f38_desc = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return f'Factores de {self.encabezado}'
