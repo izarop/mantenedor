@@ -154,17 +154,19 @@ def calificacion_edit(request, pk):
             
             # --- MODIFICACIÓN CLAVE: REDIRIGIR A FACTORES ---
             return redirect('calificacion_factores', pk=enc.pk)
+        
             # -----------------------------------------------
             
     else:
         form = CalificacionEncabezadoForm(instance=enc)
+        # return render(request, 'calificacion-editar.html', {'form': form})
         
     # NOTA: Debes asegurarte de pasar el contexto corregido (mercado_choices, origen_choices)
     context = {
         'form': form,
         'enc': enc,
         'mercado_choices': CalificacionEncabezado.MERCADO_CHOICES, 
-        'origen_choices': CalificacionEncabezado.ORIGEN_CHOICES,   
+        'origen_choices': CalificacionEncabezado.ORIGEN_CHOICES, 
     }
     return render(request, 'calificacion-editar.html', context)
 
