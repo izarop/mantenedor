@@ -49,14 +49,20 @@
         </div>
 
         <div class="field" style="grid-column:span 3">
-          <label>Evento Capital</label>
+          <label>evento_capital</label>
           <input type="text" name="evento_capital" value="{{ form.instance.evento_capital }}">
         </div>
 
         <div class="field" style="grid-column:span 2">
           <label>Valor histórico</label>
-          <input type="number" step="0.00000001" name="valor_historico" value="{{ form.instance.valor_historico }}">
+          <input type="number" name="valor_historico" value="{{ form.valor_historico.value|default:'' }}">
+          {% for error in form.valor_historico.errors %}<div style="color: red; font-size: 0.8em;">{{ error }}</div>{% endfor %}
         </div>
+
+        <!-- <div class="field" style="grid-column:span 2">
+          <label>Valor histórico</label>
+          <input type="number" step="0.00000001" name="valor_historico" value="{{ form.instance.valor_historico }}">
+        </div> -->
 
         <div class="field" style="grid-column:span 3">
           <label>Fecha Pago</label>
@@ -65,18 +71,32 @@
 
         <div class="field" style="grid-column:span 3">
           <label>Secuencia Evento</label>
-          <input type="number" min="0" name="secuencia_evento" value="{{ form.instance.secuencia_evento }}">
+          <input type="number" min="0" name="secuencia_evento" value="{{ form.secuencia_evento.value  }}">
+          <!-- <input type="number" min="0" name="secuencia_evento" value="{{ form.instance.secuencia_evento }}"> -->
         </div>
 
         <div class="field" style="grid-column:span 2">
           <label>Año</label>
-          <input type="number" name="anio" value="{{ form.instance.anio }}">
+          <input type="number" name="anio" value="{{ form.anio.value|default:'' }}">
+          {% for error in form.anio.errors %}<div style="color: red; font-size: 0.8em;">{{ error }}</div>{% endfor %}
         </div>
+
+        <!-- <div class="field" style="grid-column:span 2">
+          <label>Año</label> -->
+          <!-- <input type="number" name="anio" value="{{ form.instance.anio }}"> -->
+          <!-- <input type="number" name="anio" value="{{ form.anio.value}}">
+        </div> -->
 
         <div class="field" style="grid-column:span 2">
           <label>Factor de Actualización</label>
-          <input type="number" step="0.00000001" name="factor_actualizacion" value="{{ form.instance.factor_actualizacion }}">
+          <input type="number" name="factor_actualizacion" value="{{ form.factor_actualizacion.value|default:'' }}">
+          {% for error in form.factor_actualizacion.errors %}<div style="color: red; font-size: 0.8em;">{{ error }}</div>{% endfor %}
         </div>
+
+        <!-- <div class="field" style="grid-column:span 2">
+          <label>Factor de Actualización</label>
+          <input type="number" step="0.00000001" name="factor_actualizacion" value="{{ form.instance.factor_actualizacion }}">
+        </div> -->
 
         <div class="field" style="grid-column:span 2">
           <label>SFUT</label>

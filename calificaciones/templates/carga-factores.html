@@ -33,7 +33,6 @@
   <div class="card">
     <div class="card-header">Cargar Archivo · Carga x Factor</div>
     <div class="card-body">
-
       {% if messages %}
         <ul class="messages">
           {% for message in messages %}
@@ -42,55 +41,16 @@
         </ul>
       {% endif %}
 
-      {# FORMULARIO DE CARGA #}
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.archivo.label_tag }} {{ form.archivo }}
-        <span class="ref">
-          Solo archivos .csv con columnas:
-          <b>mercado, origen, instrumento, evento_capital, valor_historico, fecha_pago,
-          secuencia_evento, anio, factor_actualizacion, sfut, descripcion, ingreso_por_montos</b>
-          y factores <b>f08–f37</b>.
-          Cada factor: 0..1, máx 8 decimales. La suma f08..f37 por fila debe ser &gt; 0 y &le; 1.0.
-        </span>
+        <span class="ref">Solo archivos .csv con <b>encabezado_id</b> y factores <b>f08–f37</b>. Cada factor: 0..1, máx 8 decimales. La suma f08..f37 por fila debe estar en 0..1.</span>
         <div class="actions" style="margin-top:12px">
-          <button class="btn btn-primary" type="submit">Previsualizar y Validar</button>
-          <a class="btn btn-outline" href="#" onclick="cerrarCarga(); return false;">Cancelar</a>
-
-
-          
-          
-
-          <!-- <a class="btn btn-outline" href="#" onclick="window.history.back(); return false;">LOL</a> -->
-
+          <button class="btn btn-primary" type="submit">Previsualizar</button>
+          <a class="btn btn-outline" href="{% url 'calificacion_list' %}">Cancelar</a>
         </div>
       </form>
 
-      {# TABLA DE ERRORES #}
-      {% if invalid_records %}
-        <h3 style="margin-top:24px; color:#d9534f">⚠️ Registros Rechazados (Corrija su CSV)</h3>
-        <p>Los siguientes registros no cumplen la validación de negocio. Corrija su archivo y vuelva a subirlo.</p>
-        <div class="table-wrap">
-          <table class="preview">
-            <thead>
-              <tr>
-                <th>Línea CSV</th>
-                <th>Error de Validación</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for record in invalid_records %}
-              <tr>
-                <td>{{ record.linea }}</td>
-                <td style="color:#a94442">{{ record.error }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% endif %}
-
-      {# ÚNICA VISTA PREVIA DE REGISTROS VÁLIDOS #}
       {% if preview_html %}
         <h3 style="margin-top:24px">Vista previa del archivo</h3>
         <div class="table-wrap">
@@ -98,21 +58,13 @@
         </div>
         <form method="post" action="{% url 'confirmar_carga_factores' %}" style="margin-top:12px">
           {% csrf_token %}
-          <button class="btn btn-primary" type="submit" href="#">Confirmar Carga</button>
+          <button class="btn btn-primary" type="submit">Confirmar Carga</button>
           <a class="btn btn-outline" href="{% url 'carga_factores' %}">Subir otro archivo</a>
         </form>
       {% endif %}
     </div>
   </div>
 </div>
-<script>
-      function cerrarCarga() {
-        if (window.parent && window.parent.closeCarga) {
-          window.parent.closeCarga();
-        } else {
-          window.location.href = "{% url 'calificacion_list' %}";
-        }
-      }
-      </script>
+
 </body>
 </html>
