@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    .error-log-list { list-style: none; padding: 0; }
+    .error-log-list li { margin-bottom: 8px; padding: 10px; border-left: 5px solid #d9534f; background-color: #f2dede; color: #a94442; }
+  </style>
+</head>
+<body>
+<header class="appbar">
+  <div class="brand">NUAM · Mantenedor de Calificaciones Tributarias</div>
+  <nav>
+    <a href="{% url 'calificacion_list' %}">Listado</a>
+    <a href="{% url 'carga_factores' %}">Carga x Factor</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div class="card-header">{{ title }}</div>
+    <div class="card-body">
+      <h2>Log de Errores de Guardado en Base de Datos</h2>
+      <p>Se encontraron problemas al intentar guardar algunos registros. La transacción asegura que los registros erróneos no se guardaron. Por favor, revise los siguientes errores.</p>
+
+      {% if invalid_records_db %}
+        <ul class="error-log-list">
+        {% for error in invalid_records_db %}
+          <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p>No se encontraron errores de guardado en la base de datos.</p>
+      {% endif %}
+
+      <div class="footer-actions" style="margin-top:20px;">
+        <a class="btn btn-primary" href="{% url 'calificacion_list' %}">Ir al Listado de Calificaciones</a>
+        <a class="btn btn-outline" href="{% url 'carga_factores' %}">Intentar nueva carga</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

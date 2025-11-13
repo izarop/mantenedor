@@ -21,4 +21,8 @@ urlpatterns = [
     path('carga-montos/', views.carga_montos, name='carga_montos'),
     path('<int:pk>/editar/', views.calificacion_edit, name='calificacion_edit'),
     path('<int:pk>/factores/', views.calificacion_factores, name='calificacion_factores'),
+    path('carga-factores/', views.carga_factores, name='carga_factores'),
+    path('carga-factores/confirmar/', views.confirmar_carga_factores, name='confirmar_carga_factores'),
+    # NUEVA URL: Log de errores de la base de datos
+    path('carga-factores/resultados/', views.carga_resultados_factores, name='carga_resultados_factores'),
 ]

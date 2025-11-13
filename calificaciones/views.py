@@ -11,17 +11,16 @@ from django.contrib.auth.forms import AuthenticationForm
 # Importaciones de tus modelos/formularios (Asegúrate de tener ROL_* en models.py)
 from .models import CalificacionEncabezado, CalificacionFactores
 from .forms import CalificacionEncabezadoForm, CalificacionFactoresForm, RegistroForm, CargaFactoresForm 
-from .models import Perfil, ROL_ADMIN, ROL_ANALISTA, ROL_CORREDOR, ROL_SUPERVISOR
+from .models import Perfil, ROL_ADMIN, ROL_ANALISTA
 from decimal import Decimal, InvalidOperation
 from django.utils import timezone
 import io
 from django.views.decorators.http import require_http_methods
 import json
-
-
-# =================================================================
-# DECORADOR DE AUTORIZACIÓN (RBAC)
-# =================================================================
+import logging
+from django.db import transaction
+import datetime
+from django.http import HttpResponse
 
 def rol_requerido(roles):
     """
@@ -50,10 +49,7 @@ def rol_requerido(roles):
         return _wrapped_view
     return decorator
 
-# =================================================================
-# VISTAS DE AUTENTICACIÓN
-# =================================================================
-
+#registro pero no concuerda mucho con la logica
 def register_view(request):
     if request.user.is_authenticated:
         return redirect('calificacion_list')
@@ -71,7 +67,7 @@ def register_view(request):
         form = RegistroForm()
     return render(request, 'register.html', {'form': form})
 
-
+#LOGIN
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('calificacion_list')
@@ -95,18 +91,12 @@ def logout_view(request):
     messages.info(request, "Has cerrado sesión correctamente.")
     return redirect('login') 
 
-
-# =================================================================
-# VISTAS DE CONTENIDO CON RBAC APLICADO
-# =================================================================
-
-    
+#LISTADO DE CALIFICACIONES   
 @login_required(login_url='login')
 def calificacion_list(request):
     qs = CalificacionEncabezado.objects.select_related('factores')
 
     try:
-        # COMENTADO: Mantiene el acceso global por ahora, para confirmar que los datos se muestren.
         pass
     except Exception:
         pass 
@@ -127,7 +117,7 @@ def calificacion_list(request):
 
     return render(request, 'index.html', {'items': qs})
 
-@rol_requerido([ROL_ADMIN, ROL_ANALISTA, ROL_CORREDOR])
+@rol_requerido([ROL_ADMIN, ROL_ANALISTA])
 def calificacion_create(request):
     if request.method == 'POST':
         form = CalificacionEncabezadoForm(request.POST)
@@ -141,8 +131,7 @@ def calificacion_create(request):
         
     return render(request, 'calificacion-ingresar.html', {'form': form})
 
-# ... (código anterior)
-
+#EDICION DE CALIFICACIONES
 @rol_requerido([ROL_ADMIN, ROL_ANALISTA])
 def calificacion_edit(request, pk):
     enc = get_object_or_404(CalificacionEncabezado, pk=pk)
@@ -151,15 +140,11 @@ def calificacion_edit(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, "Encabezado modificado. Ahora puedes editar los factores.")
-            
-            # --- MODIFICACIÓN CLAVE: REDIRIGIR A FACTORES ---
             return redirect('calificacion_factores', pk=enc.pk)
-            # -----------------------------------------------
             
     else:
         form = CalificacionEncabezadoForm(instance=enc)
         
-    # NOTA: Debes asegurarte de pasar el contexto corregido (mercado_choices, origen_choices)
     context = {
         'form': form,
         'enc': enc,
@@ -168,8 +153,8 @@ def calificacion_edit(request, pk):
     }
     return render(request, 'calificacion-editar.html', context)
 
-# Factores / Calcular (Admin, Analista pueden editar; Supervisor solo ver/consultar)
-@rol_requerido([ROL_ADMIN, ROL_ANALISTA, ROL_SUPERVISOR]) 
+#INGRESO DE FACTORES
+@rol_requerido([ROL_ADMIN, ROL_ANALISTA,]) 
 def calificacion_factores(request, pk):
     enc = get_object_or_404(CalificacionEncabezado, pk=pk)
     factores, _ = CalificacionFactores.objects.get_or_create(encabezado=enc)
@@ -185,7 +170,6 @@ def calificacion_factores(request, pk):
             f = form.save()
             
             try:
-                # Esto requiere que implementes f.todos_en_cero() en CalificacionFactores
                 enc.pendiente = f.todos_en_cero() 
             except AttributeError:
                 enc.pendiente = False 
@@ -204,53 +188,35 @@ def calificacion_factores(request, pk):
     })
 
 
-# Vistas de carga (Solo Admin y Analista)
-@rol_requerido([ROL_ADMIN, ROL_ANALISTA])
-def carga_factores(request):
-    return render(request, 'carga-factores.html')
-
 @rol_requerido([ROL_ADMIN, ROL_ANALISTA])
 def carga_montos(request):
     return render(request, 'carga-montos.html')
 
-# Vista extra por conveniencia (Mapea la URL raíz a la lista principal)
 def index(request):
     return redirect('calificacion_list')
 
 
-# NOTA: Usaremos ROL_ADMIN y ROL_ANALISTA (1 y 2) para permitir la eliminación operativa
+# ELIMINACION CALIFICACIONES
 @rol_requerido([ROL_ADMIN, ROL_ANALISTA])
 def calificacion_delete(request, pk):
-    # La eliminación debe realizarse mediante POST por seguridad (CSRF)
     if request.method == 'POST':
         enc = get_object_or_404(CalificacionEncabezado, pk=pk)
-        
-        # Eliminar el registro (Django se encarga de eliminar también los factores por CASCADE)
         enc.delete()
         
         messages.success(request, f"La Calificación ID {pk} ha sido eliminada permanentemente.")
         return redirect('calificacion_list')
-    
-    # Si alguien intenta acceder por GET, lo redirigimos o mostramos un error
+
     messages.error(request, "Método no permitido para la eliminación.")
     return redirect('calificacion_list')
 
-
-# ===========================
-# CARGA MASIVA: ENCABEZADO + FACTORES
-# ===========================
-
-# Columnas de factores (modelo usa f19a)
 FACTOR_COLS = [f"f{i:02}" for i in range(8, 19)] + ["f19a"] + [f"f{i:02}" for i in range(20, 38)]
 
-# Columnas mínimas para crear/actualizar el encabezado
 HEADER_COLS = [
     "mercado", "origen", "instrumento", "evento_capital",
     "valor_historico", "fecha_pago", "secuencia_evento",
     "anio", "factor_actualizacion", "sfut", "descripcion"
 ]
 
-# Si viene, se usa para actualizar; si está vacío, se crea el encabezado
 REQ_COLS = ["encabezado_id"] + HEADER_COLS + FACTOR_COLS
 
 def _df_from_uploaded(file):
@@ -271,30 +237,24 @@ def _to_bool(x):
 def _validate_df(df):
     errors = []
 
-    # normaliza encabezados (evita espacios accidentales)
     df.columns = [str(c).strip() for c in df.columns]
 
-    # 1) Columnas obligatorias
+    
     faltantes = [c for c in REQ_COLS if c not in df.columns]
     if faltantes:
         errors.append(f"Columnas faltantes: {', '.join(faltantes)}")
-        return errors  # no seguimos si faltan columnas
+        return errors  
 
-    # 2) Tipos numéricos, rango 0..1 y máx 8 decimales
     for col in FACTOR_COLS:
-        # fuerza numérico; valores inválidos -> NaN
         df[col] = pd.to_numeric(df[col], errors='coerce')
 
-        # rango 0..1 (NaN se ignoran aquí, se validan en decimales)
         fuera_rango = df[(df[col] < 0) | (df[col] > 1)]
         if not fuera_rango.empty:
             idxs = ", ".join(map(str, (fuera_rango.index[:5] + 1).tolist()))
             errors.append(f"{col}: hay valores fuera de 0..1 (filas: {idxs}...)")
 
-        # máximo 8 decimales
         def _dec_ok(v):
             try:
-                # rechaza None/NaN/inf
                 if v is None:
                     return False
                 fv = float(v)
@@ -302,12 +262,10 @@ def _validate_df(df):
                     return False
 
                 d = Decimal(str(fv))
-                # por si acaso: NaN/Inf en Decimal
                 if not d.is_finite():
                     return False
 
                 exp = d.as_tuple().exponent
-                # en Decimals “normales” exponent es int; si no lo es, inválido
                 if not isinstance(exp, int):
                     return False
 
@@ -321,7 +279,6 @@ def _validate_df(df):
             idxs = ", ".join(map(str, (malos_dec.index[:5] + 1).tolist()))
             errors.append(f"{col}: más de 8 decimales o valor inválido (filas: {idxs}...)")
 
-    # 3) Suma global f08..f37 entre 0 y 1 (ignora NaN como 0 para la suma)
     df["_suma_factores"] = df[FACTOR_COLS].fillna(0).sum(axis=1)
     bad_sum = df[(df["_suma_factores"] < 0) | (df["_suma_factores"] > 1)]
     if not bad_sum.empty:
@@ -330,169 +287,301 @@ def _validate_df(df):
 
     return errors
 
+logger = logging.getLogger(__name__)
+
+FACTOR_FIELDS_TO_SUM = [f'f{i:02d}' for i in range(8, 38)] 
+SUMA_MAXIMA = Decimal('1.0')
+DECIMAL_PRECISION = Decimal('0.00000001') # Para asegurar la precisión en la suma
 
 
 
-@require_http_methods(["GET", "POST"])
-@login_required(login_url='login')
+def to_json_safe(value):
+    """
+    Convierte Decimals dentro de listas/dicts a string
+    para que se puedan guardar en sesión (JSON).
+    """
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, dict):
+        return {k: to_json_safe(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [to_json_safe(v) for v in value]
+    return value
+
+
+FACTOR_FIELDS_TO_SUM = [f"f{str(i).zfill(2)}" for i in range(8, 38)]  
+DECIMAL_PRECISION = Decimal("0.00000001")
+SUMA_MAXIMA = Decimal("1.0")
+
+#CARGA DE FACTORES
+@login_required
+@rol_requerido([ROL_ADMIN, ROL_ANALISTA])
 def carga_factores(request):
     """
-    Sube CSV -> muestra tabla editable con encabezado_id y f08..f37.
-    Permite corregir en la misma vista antes de confirmar.
+    1. Carga el CSV.
+    2. Valida FACTORES (rango y suma > 0 y <= 1).
+    3. Muestra previsualización de TODOS los campos del CSV.
     """
     form = CargaFactoresForm()
-    columns, rows = None, None  # para renderizar tabla editable
+    context = {'form': form, 'preview_html': None, 'invalid_records': []}
 
-    if request.method == "POST" and request.FILES:
+    if request.method == 'POST':
         form = CargaFactoresForm(request.POST, request.FILES)
+        context['form'] = form
+
         if form.is_valid():
+            archivo = request.FILES['archivo']
+
             try:
-                df = _df_from_uploaded(form.cleaned_data['archivo'])
+                data_set = archivo.read().decode('utf-8')
+                data_io = io.StringIO(data_set)
+                df = pd.read_csv(data_io)
+                df.columns = [col.lower().strip() for col in df.columns]
             except Exception as e:
-                messages.error(request, f"No se pudo leer el archivo: {e}")
-                return render(request, "carga-factores.html", {"form": form})
+                messages.error(request, f"Error al leer/decodificar el archivo CSV: {e}")
+                return render(request, 'carga-factores.html', context)
 
-            # validación (muestra mensajes, pero igual seguimos para permitir edición)
-            errs = _validate_df(df.copy())
-            for e in errs:
-                messages.error(request, e)
+            HEADER_FIELDS = [
+                'mercado', 'origen', 'instrumento',
+                'evento_capital', 'valor_historico', 'fecha_pago',
+                'secuencia_evento', 'anio', 'factor_actualizacion',
+                'sfut', 'descripcion',
+            ]
 
-            # ordenar/filtrar columnas a las requeridas
-            faltantes = [c for c in REQ_COLS if c not in df.columns]
-            if faltantes:
-                messages.error(request, f"Columnas faltantes: {', '.join(faltantes)}")
-                return render(request, "carga-factores.html", {"form": form})
+            # Validar que existan todas las columnas requeridas
+            required_cols = HEADER_FIELDS + FACTOR_FIELDS_TO_SUM
+            missing = [c for c in required_cols if c not in df.columns]
+            if missing:
+                messages.error(
+                    request,
+                    "Columnas faltantes en el CSV: " + ", ".join(missing)
+                )
+                return render(request, 'carga-factores.html', context)
 
-            df = df[REQ_COLS].copy()
+            valid_rows = []
+            invalid_records_log = []
 
-            # convertir NaN -> '' para inputs; no redondeamos aún para que el usuario lo corrija
-            df = df.astype(object).where(pd.notna(df), "")
+            for index, row in df.iterrows():
+                linea_numero = index + 2  
+                row_is_valid = True
+                sum_factors = Decimal('0.0')
+                error_message = ""
 
-            columns = REQ_COLS[:]  # encabezado_id + f08..f37
-            rows = df.to_dict(orient='records')
+                temp_data = {}
 
-            # guardamos en sesión por si el usuario cierra sin confirmar
-            request.session['factores_csv'] = df.to_json(orient='records')
+                for col in HEADER_FIELDS:
+                    temp_data[col] = row.get(col)
 
-            messages.info(
-                request,
-                "Vista previa generada. Puedes corregir valores aquí y luego confirmar."
-            )
+                for factor_field in FACTOR_FIELDS_TO_SUM:
+                    raw_value = row.get(factor_field)
 
-    return render(
-        request,
-        "carga-factores.html",
-        {"form": form, "columns": columns, "rows": rows}
-    )
+                    if pd.isna(raw_value):
+                        value_to_process = '0.0'
+                    else:
+                        value_to_process = str(raw_value).strip()
+
+                    try:
+                        dec_value = Decimal(value_to_process or '0.0').quantize(DECIMAL_PRECISION)
+
+                        if dec_value < Decimal('0.0') or dec_value > Decimal('1.0'):
+                            raise ValueError(
+                                f"Factor '{factor_field}' ({dec_value}) fuera del rango [0, 1]."
+                            )
+
+                        sum_factors += dec_value
+                        temp_data[factor_field] = dec_value
+
+                    except (InvalidOperation, ValueError) as e:
+                        error_message = f"Factor '{factor_field}' inválido o fuera de rango: {e}"
+                        row_is_valid = False
+                        break
+
+                if row_is_valid:
+                    sum_q = sum_factors.quantize(DECIMAL_PRECISION)
+                    if sum_q <= Decimal('0.0') or sum_q > SUMA_MAXIMA:
+                        error_message = (
+                            f"La suma de factores ({sum_q}) debe ser mayor a 0 "
+                            f"y menor o igual a {SUMA_MAXIMA}."
+                        )
+                        row_is_valid = False
+
+                if not row_is_valid:
+                    logger.warning(
+                        f"Carga Factores Rechazada - Línea {linea_numero}: Error: {error_message}"
+                    )
+                    invalid_records_log.append({
+                        'linea': linea_numero,
+                        'error': error_message
+                    })
+                else:
+                    valid_rows.append(temp_data)
+
+            if valid_rows:
+                request.session['carga_factores_validos'] = to_json_safe(valid_rows)
+
+                preview_df = pd.DataFrame(valid_rows)
+                context['preview_html'] = preview_df.to_html(
+                    classes=['preview'],
+                    index=False,
+                    float_format='%.8f'
+                )
+                messages.success(
+                    request,
+                    f"Validación completa. {len(valid_rows)} registros listos para guardar. "
+                    "Revise la previsualización."
+                )
+
+            if invalid_records_log:
+                messages.error(
+                    request,
+                    f"¡Atención! {len(invalid_records_log)} registros fueron rechazados por errores en factores."
+                )
+                context['invalid_records'] = invalid_records_log
+
+    return render(request, 'carga-factores.html', context)
 
 
-# =======================
-# CONFIRMACIÓN Y GUARDADO
-# =======================
-@require_http_methods(["POST", "GET"])
-@login_required(login_url='login')
+FACTOR_FIELDS_TO_SUM = [f"f{str(i).zfill(2)}" for i in range(8, 38)]
+FACTOR_FIELDS_TO_SUM[11] = 'f19a'  
+
+def _to_bool(value):
+    """
+    Convierte valores tipo 1/0, 'SI'/'NO', 'TRUE'/'FALSE' en boolean.
+    """
+    if value is None:
+        return False
+    s = str(value).strip().upper()
+    return s in ('1', 'TRUE', 'SI', 'S')
+
+#RESULTADOS DE LOS FACTORES
+@login_required
+def carga_resultados_factores(request):
+    """
+    Muestra los errores de la fase de confirmación de la DB.
+    """
+    db_errors = request.session.pop('carga_db_errors', [])
+
+    if not db_errors:
+        return redirect('calificacion_list')
+
+    context = {
+        'invalid_records_db': db_errors,
+        'title': 'Resultados de Carga de Factores',
+    }
+    return render(request, 'carga_resultados.html', context)
+
+##MODIFICADOOOOOOOOOOOOOOOOOOOOO CONFIRMACION DE FACTORES
+@login_required
+@rol_requerido([ROL_ADMIN, ROL_ANALISTA])
+@require_http_methods(["POST"])
 def confirmar_carga_factores(request):
     """
-    Recibe JSON (desde la tabla editable) o, en fallback, lo que quedó en sesión.
-    Vuelve a validar en servidor, normaliza a 8 decimales y guarda.
+    Crea CalificacionEncabezado + CalificacionFactores a partir de los datos
+    previamente validados y almacenados en sesión.
     """
-    # 1) Origen de datos
-    if request.method == "POST" and request.POST.get("data_json"):
-        data_json = request.POST["data_json"]
-    else:
-        data_json = request.session.get("factores_csv")
+    valid_data = request.session.pop('carga_factores_validos', None)
 
-    if not data_json:
-        messages.error(request, "No hay datos para confirmar. Sube un CSV primero.")
-        return redirect("carga_factores")
+    if not valid_data:
+        messages.error(request, "No hay datos válidos para confirmar. Vuelva al paso de carga.")
+        return redirect('carga_factores')
+
+    ok, err = 0, 0
+    errors_log = []
 
     try:
-        # data_json puede venir como lista JSON o como DF.to_json
-        data = json.loads(data_json)
-        df = pd.DataFrame(data)
-    except Exception:
-        try:
-            df = pd.read_json(io.StringIO(data_json))
-        except Exception as e:
-            messages.error(request, f"No se pudo interpretar los datos: {e}")
-            return redirect("carga_factores")
+        with transaction.atomic():
+            for idx, row in enumerate(valid_data, start=1):
+                try:
+                    mercado = row.get('mercado')
+                    origen = row.get('origen') or ''
+                    instrumento = row.get('instrumento')
+                    evento_capital = int(row.get('evento_capital') or 0)
 
-    # 2) Validación servidor (tipos/rangos/decimales/suma)
-    #    - Forzamos numéricos y redondeamos a 8; rechazamos vacíos o no numéricos
-    hard_errors = []
+                    valor_historico = Decimal(str(row.get('valor_historico') or '0')).quantize(Decimal("0.00000000"))
+                    fecha_pago_str = str(row.get('fecha_pago'))
+                    fecha_pago = datetime.date.fromisoformat(fecha_pago_str)  
 
-    # encabezado_id
-    try:
-        df["encabezado_id"] = pd.to_numeric(df["encabezado_id"], errors="coerce").astype("Int64")
-    except Exception:
-        hard_errors.append("encabezado_id inválido (no numérico).")
+                    secuencia_evento = int(row.get('secuencia_evento') or 0)
+                    anio = int(row.get('anio') or 0)
+                    factor_actualizacion = Decimal(str(row.get('factor_actualizacion') or '0')).quantize(Decimal("0.00000000"))
 
-    # factores
-    for col in FACTOR_COLS:
-        df[col] = pd.to_numeric(df[col], errors="coerce")
-        if df[col].isna().any():
-            bad = df[df[col].isna()].index[:5] + 1
-            hard_errors.append(f"{col}: celdas vacías o no numéricas (filas: {', '.join(map(str, bad))}...)")
-        # rango
-        fuera = df[(df[col] < 0) | (df[col] > 1)]
-        if not fuera.empty:
-            bad = fuera.index[:5] + 1
-            hard_errors.append(f"{col}: valores fuera de 0..1 (filas: {', '.join(map(str, bad))}...)")
-        # normalizamos a 8 decimales
-        df[col] = df[col].round(8)
+                    sfut = _to_bool(row.get('sfut'))
+                    descripcion = row.get('descripcion') or ''
 
-    # suma por fila 0..1
-    df["_suma"] = df[FACTOR_COLS].sum(axis=1)
-    fuera_suma = df[(df["_suma"] < 0) | (df["_suma"] > 1)]
-    if not fuera_suma.empty:
-        bad = fuera_suma.index[:5] + 1
-        hard_errors.append(f"Suma f08..f37 fuera de 0..1 (filas: {', '.join(map(str, bad))}...)")
+                    enc = CalificacionEncabezado.objects.create(
+                        mercado=mercado,
+                        origen=origen,
+                        instrumento=instrumento,
+                        evento_capital=evento_capital,
+                        valor_historico=valor_historico,
+                        fecha_pago=fecha_pago,
+                        secuencia_evento=secuencia_evento,
+                        anio=anio,
+                        factor_actualizacion=factor_actualizacion,
+                        sfut=sfut,
+                        descripcion=descripcion,
+                    )
 
-    if hard_errors:
-        for e in hard_errors:
-            messages.error(request, e)
-        # devolvemos al editor con lo que el usuario ya tenía
-        columns = REQ_COLS[:]
-        rows = df[REQ_COLS].astype(object).where(pd.notna(df[REQ_COLS]), "").to_dict(orient="records")
-        return render(request, "carga-factores.html", {
-            "form": CargaFactoresForm(),
-            "columns": columns,
-            "rows": rows
-        })
+                    factores_data = {}
+                    for field in FACTOR_FIELDS_TO_SUM:
+                        v = row.get(field, '0')
+                        factores_data[field] = Decimal(str(v)).quantize(Decimal("0.00000000"))
 
-    # 3) Guardado
-    ok, err, no_enc = 0, 0, []
-    for _, row in df.iterrows():
-        try:
-            enc_id = int(row["encabezado_id"])
-            try:
-                enc = CalificacionEncabezado.objects.get(id=enc_id)
-            except CalificacionEncabezado.DoesNotExist:
-                no_enc.append(enc_id)
-                continue
+                    CalificacionFactores.objects.create(
+                        encabezado=enc,
+                        **factores_data
+                    )
 
-            fac, _ = CalificacionFactores.objects.get_or_create(encabezado=enc)
+                    ok += 1
 
-            # set f08..f37 con Decimal cuantizado
-            for i in range(8, 38):
-                v = Decimal(str(row[f"f{i:02}"])).quantize(Decimal("0.00000000"))
-                setattr(fac, f"f{i:02}", v)
-            fac.save()
+                except Exception as e:
+                    err += 1
+                    errors_log.append(f"Fila {idx}: Error al guardar en BD: {e}")
+                    logger.error(f"Error al guardar fila {idx}: {e}")
 
-            enc.pendiente = False
-            enc.actualizado = timezone.now()
-            enc.save(update_fields=["pendiente", "actualizado"])
-            ok += 1
+    except Exception as e:
+        messages.error(request, f"Error CRÍTICO de base de datos: La transacción ha fallado. {e}")
+        logger.critical(f"Error de transacción en carga masiva: {e}")
+        return redirect('carga_factores')
 
-        except Exception as ex:
-            err += 1
-            messages.warning(request, f"encabezado_id={row.get('encabezado_id')}: {ex}")
+    if ok > 0:
+        messages.success(
+            request,
+            f"¡Carga Masiva Exitosa! Se guardaron {ok} registros de calificaciones con sus factores."
+        )
 
-    if no_enc:
-        ids_txt = ", ".join(map(str, sorted(set(no_enc))))
-        messages.warning(request, f"IDs de encabezado inexistentes: {ids_txt}")
-    messages.success(request, f"Carga completada. Guardados: {ok}, con error: {err}.")
+    if errors_log:
+        request.session['carga_db_errors'] = errors_log
+        messages.warning(
+            request,
+            f"Atención: {len(errors_log)} registros no pudieron ser guardados en la BD."
+        )
+        return redirect('carga_resultados_factores')
 
-    # limpiar sesión
-    request.session.pop("factores_csv", None)
-    return redirect("calificacion_list")
+    listado_url = reverse('calificacion_list')
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Carga completa</title>
+    </head>
+    <body>
+    <script>
+      if (window.parent && window.parent.closeCarga) {{
+          // Estamos dentro del iframe de la modal
+          window.parent.closeCarga();           // Cierra la modal
+          window.parent.location.href = "{listado_url}";  // Vuelve al listado
+      }} else {{
+          // Por si se abrió fuera de la modal
+          window.location.href = "{listado_url}";
+      }}
+    </script>
+    </body>
+    </html>
+    """
+    return HttpResponse(html)
+
+    
+

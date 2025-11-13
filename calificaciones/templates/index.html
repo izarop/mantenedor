@@ -23,8 +23,6 @@
         
         {% if rol == 1 or rol == 2 %}
           <a href="{% url 'calificacion_create' %}">Ingresar Calificación</a>
-          <a href="{% url 'carga_factores' %}">Carga x Factor (DJ1948)</a>
-          <a href="{% url 'carga_montos' %}">Carga x Monto (Factores)</a>
         {% endif %}
 
         {% if rol == 1 or rol == 4 %}
@@ -183,7 +181,7 @@
             {% if rol == 1 or rol == 2 %}
             <button class="btn btn-outline" type="button" onclick="openCarga()">Carga x Factor</button>
 
-              <a class="btn btn-outline" href="{% url 'carga_factores' %}">Carga x Factor</a>
+              <!-- <a class="btn btn-outline" href="{% url 'carga_factores' %}">Carga x Factor</a> -->
               <a class="btn btn-outline" href="{% url 'carga_montos' %}">Carga x Monto</a>
             {% endif %}
 
